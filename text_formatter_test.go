@@ -3,13 +3,15 @@ package logrus
 import (
 	"bytes"
 	"errors"
+	"strings"
 	"testing"
 	"time"
-	"strings"
 )
 
 func TestQuoting(t *testing.T) {
 	tf := &TextFormatter{DisableColors: true}
+
+	StandrdLogger().ShowCaller(false)
 
 	checkQuoting := func(q bool, value interface{}) {
 		b, _ := tf.Format(WithField("test", value))

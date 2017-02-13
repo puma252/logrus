@@ -1,6 +1,12 @@
 package logrus
 
-import "time"
+import (
+	"fmt"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"time"
+)
 
 const DefaultTimestampFormat = time.RFC3339
 
@@ -30,16 +36,69 @@ type Formatter interface {
 //
 // It's not exported because it's still using Data in an opinionated way. It's to
 // avoid code duplication between the two default formatters.
-func prefixFieldClashes(data Fields) {
+func prefixFieldClashes(data Fields, showCaller bool, depth int) {
 	if t, ok := data["time"]; ok {
 		data["fields.time"] = t
 	}
-
 	if m, ok := data["msg"]; ok {
 		data["fields.msg"] = m
 	}
-
 	if l, ok := data["level"]; ok {
 		data["fields.level"] = l
 	}
+
+	if showCaller {
+		if _, ok := data["caller"]; ok {
+			data["fields.caller"] = data["caller"]
+		}
+
+		data["caller"] = getcaller(depth)
+	}
+}
+
+func caller(depth int) (str string) {
+
+	_, file, line, ok := runtime.Caller(depth)
+	if !ok {
+		str = "???: ?"
+	} else {
+		str = fmt.Sprint(filepath.Base(file), ":", line)
+	}
+	return
+}
+
+func getcaller(depth int) (str string) {
+
+	MaxDepth := 9 //max search depth
+	UnKnownFileInfo := "???: ?"
+
+	d := depth - 2 //the min depth of logrus.Entry.log
+	funcName := ""
+	str = UnKnownFileInfo
+
+	pc, _, _, ok := runtime.Caller(d)
+
+	for {
+
+		if !ok {
+			return
+		}
+		funcName = runtime.FuncForPC(pc).Name()
+		funcNames := strings.Split(funcName, "/")
+
+		if funcNames[len(funcNames)-1] == "logrus.Entry.log" {
+			str = caller(d + 3)
+			return
+		}
+
+		d = d + 1
+		pc, _, _, ok = runtime.Caller(d)
+
+		if d > MaxDepth {
+			fmt.Printf("Failed to get File infomation, execeed the max depth %d\n", MaxDepth)
+			break
+		}
+	}
+
+	return
 }

@@ -42,14 +42,23 @@ type Entry struct {
 
 	// When formatter is called in entry.log(), an Buffer may be set to entry
 	Buffer *bytes.Buffer
+
+	depth int
 }
 
 func NewEntry(logger *Logger) *Entry {
 	return &Entry{
 		Logger: logger,
 		// Default is three fields, give a little extra room
-		Data: make(Fields, 5),
+		Data:  make(Fields, 5),
+		depth: 6,
 	}
+}
+
+func newEntry(logger *Logger) *Entry {
+	en := NewEntry(logger)
+	en.depth = 7
+	return en
 }
 
 // Returns the string representation from the reader and ultimately the
@@ -82,7 +91,7 @@ func (entry *Entry) WithFields(fields Fields) *Entry {
 	for k, v := range fields {
 		data[k] = v
 	}
-	return &Entry{Logger: entry.Logger, Data: data}
+	return &Entry{Logger: entry.Logger, Data: data, depth: entry.depth}
 }
 
 // This function is not declared with a pointer value because otherwise
@@ -148,7 +157,9 @@ func (entry *Entry) Warn(args ...interface{}) {
 }
 
 func (entry *Entry) Warning(args ...interface{}) {
-	entry.Warn(args...)
+	if entry.Logger.Level >= WarnLevel {
+		entry.log(WarnLevel, fmt.Sprint(args...))
+	}
 }
 
 func (entry *Entry) Error(args ...interface{}) {
@@ -181,7 +192,7 @@ func (entry *Entry) Debugf(format string, args ...interface{}) {
 
 func (entry *Entry) Infof(format string, args ...interface{}) {
 	if entry.Logger.Level >= InfoLevel {
-		entry.Info(fmt.Sprintf(format, args...))
+		entry.log(InfoLevel, fmt.Sprintf(format, args...))
 	}
 }
 
@@ -190,13 +201,13 @@ func (entry *Entry) Printf(format string, args ...interface{}) {
 }
 
 func (entry *Entry) Warnf(format string, args ...interface{}) {
-	if entry.Logger.Level >= WarnLevel {
-		entry.Warn(fmt.Sprintf(format, args...))
-	}
+	entry.Warn(fmt.Sprintf(format, args...))
 }
 
 func (entry *Entry) Warningf(format string, args ...interface{}) {
-	entry.Warnf(format, args...)
+	if entry.Logger.Level >= WarnLevel {
+		entry.log(WarnLevel, fmt.Sprintf(format, args...))
+	}
 }
 
 func (entry *Entry) Errorf(format string, args ...interface{}) {
@@ -272,4 +283,12 @@ func (entry *Entry) Panicln(args ...interface{}) {
 func (entry *Entry) sprintlnn(args ...interface{}) string {
 	msg := fmt.Sprintln(args...)
 	return msg[:len(msg)-1]
+}
+
+func (entry *Entry) SetDefaultDepth() {
+	entry.depth = 6
+}
+
+func (entry *Entry) IncDepth() {
+	entry.depth = entry.depth + 1
 }

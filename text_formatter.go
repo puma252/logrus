@@ -70,7 +70,7 @@ func (f *TextFormatter) Format(entry *Entry) ([]byte, error) {
 		b = &bytes.Buffer{}
 	}
 
-	prefixFieldClashes(entry.Data)
+	//prefixFieldClashes(entry.Data)
 
 	f.terminalOnce.Do(func() {
 		if entry.Logger != nil {
