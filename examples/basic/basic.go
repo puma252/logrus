@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/Sirupsen/logrus"
-	// "os"
 )
 
 var log = logrus.New()
@@ -19,9 +18,11 @@ func init() {
 	// }
 
 	log.Level = logrus.DebugLevel
+	log.ShowCaller(true)
 }
 
 func main() {
+
 	defer func() {
 		err := recover()
 		if err != nil {

@@ -72,7 +72,7 @@ func getcaller(depth int) (str string) {
 	MaxDepth := 9 //max search depth
 	UnKnownFileInfo := "???: ?"
 
-	d := depth - 2 //the min depth of logrus.Entry.log
+	d := depth - 3 //the min depth of logrus.Entry.log
 	funcName := ""
 	str = UnKnownFileInfo
 
