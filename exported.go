@@ -172,7 +172,7 @@ func Errorf(format string, args ...interface{}) {
 // Panicf logs a message at level Panic on the standard logger.
 func Panicf(format string, args ...interface{}) {
 	if std.Level >= PanicLevel {
-		newEntry(std).Panicf(fomat, args...)
+		newEntry(std).Panicf(format, args...)
 	}
 }
 
